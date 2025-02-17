@@ -2,11 +2,14 @@ import os
 from pathlib import Path
 import time
 
+
 template_name = 'ModernEarthSimple' # WHICH TEMPLATE TO USE
 
-photochem_templates = Path('PHOTOCHEM') / 'INPUTFILES' / 'TEMPLATES'
-clima_templates = Path('CLIMA') / 'IO' / 'TEMPLATES'
-clima_io = Path('CLIMA') / 'IO'
+atmos_dir = Path(__file__).parent.resolve()
+
+photochem_templates = atmos_dir / 'PHOTOCHEM' / 'INPUTFILES' / 'TEMPLATES'
+clima_templates = atmos_dir / 'CLIMA' / 'IO' / 'TEMPLATES'
+clima_io = atmos_dir / 'CLIMA' / 'IO'
 
 photo_template = photochem_templates / template_name
 clima_template = clima_templates / template_name
@@ -14,6 +17,11 @@ clima_template = clima_templates / template_name
 photo_ins = Path('PHOTOCHEM/INPUTFILES/')
 clima_ins = Path('CLIMA/IO')
 
+def set_template(template_name : str):
+    global photo_template, clima_template
+
+    photo_template = photochem_templates / template_name
+    clima_template = clima_templates / template_name
 
 def recompile_photo():
     print("\033[32mRecompiling PHOTOCHEM...\033[0m")
@@ -98,4 +106,11 @@ def couple_initialization_run():
     set_photo_coupled(1)
     return photo_time, clima_time
 
-    
+def run_photochem_uncoupled(template_name : str = None):
+    if template_name:
+        set_template(template_name)
+    print("\033[32mRunning uncoupled PHOTOCHEM...\033[0m")
+    place_photo_files()
+    set_photo_coupled(0)
+    recompile_photo()
+    return run_photo()
