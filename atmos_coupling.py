@@ -1,7 +1,7 @@
 import os
+import subprocess
 from pathlib import Path
 import time
-
 
 template_name = 'ModernEarthSimple' # WHICH TEMPLATE TO USE
 
@@ -17,21 +17,26 @@ clima_template = clima_templates / template_name
 photo_ins = Path('PHOTOCHEM/INPUTFILES/')
 clima_ins = Path('CLIMA/IO')
 
-def set_template(template_name : str):
-    global photo_template, clima_template
+def set_template(template : str):
+    global photo_template, clima_template, template_name
+    template_name = template
+    photo_template = photochem_templates / template
+    clima_template = clima_templates / template
 
-    photo_template = photochem_templates / template_name
-    clima_template = clima_templates / template_name
+def recompile_photo(verbose=False):
+    std_out = None if verbose else subprocess.DEVNULL
 
-def recompile_photo():
     print("\033[32mRecompiling PHOTOCHEM...\033[0m")
-    os.system('make -f PhotoMake clean')
-    os.system('make -f PhotoMake')
+    subprocess.run(['make', '-f', 'PhotoMake', 'clean'], stdout=std_out, stderr=subprocess.STDOUT) # make -f PhotoMake clean
+    subprocess.run(['make', '-f', 'PhotoMake'], stdout=std_out, stderr=subprocess.STDOUT) # make -f PhotoMake
 
-def recompile_clima():
+
+def recompile_clima(verbose=False):
+    std_out = None if verbose else subprocess.DEVNULL
+
     print("\033[32mRecompiling CLIMA...\033[0m")
-    os.system('make -f ClimaMake clean')
-    os.system('make -f ClimaMake')
+    subprocess.run(['make', '-f', 'ClimaMake', 'clean'], stdout=std_out, stderr=subprocess.STDOUT) # make -f ClimaMake clean
+    subprocess.run(['make', '-f', 'ClimaMake'], stdout=std_out, stderr=subprocess.STDOUT) # make -f ClimaMake
 
 def place_photo_files():
     files_to_copy = [
@@ -57,18 +62,20 @@ def place_clima_files():
     dest_path.write_bytes(src_path.read_bytes())
     print(f"Copied input_clima.dat from {clima_template} to {dest_path}")
 
-def run_photo():
+def run_photo(verbose=False):
+    std_out = None if verbose else subprocess.DEVNULL
     print("\033[32mRunning PHOTOCHEM...\033[0m")
     start_time = time.time()
-    os.system('./Photo.run')
+    subprocess.run('./Photo.run', stdout=std_out, stderr=subprocess.STDOUT)
     runtime = time.time() - start_time
     print(f"PHOTOCHEM run time: {runtime:.1f} seconds")
     return runtime
 
-def run_clima():
+def run_clima(verbose=False):
+    std_out = None if verbose else subprocess.DEVNULL
     print("\033[32mRunning CLIMA...\033[0m")
     start_time = time.time()
-    os.system('./Clima.run')
+    subprocess.run('./Clima.run', stdout=std_out, stderr=subprocess.STDOUT)
     runtime = time.time() - start_time
     print(f"CLIMA run time: {runtime:.1f} seconds")
     return runtime
@@ -91,6 +98,7 @@ def set_clima_coupled(val : int):
 
 def couple_initialization_run():
     print("\033[32mRunning coupled initialization...\033[0m")
+    print("\033[32mSelected Template: {template_name}\033[0m")
     place_photo_files()
     set_photo_coupled(0)
     
@@ -110,6 +118,7 @@ def run_photochem_uncoupled(template_name : str = None):
     if template_name:
         set_template(template_name)
     print("\033[32mRunning uncoupled PHOTOCHEM...\033[0m")
+    print("\033[32mSelected Template: {template_name}\033[0m")
     place_photo_files()
     set_photo_coupled(0)
     recompile_photo()
