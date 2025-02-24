@@ -23,6 +23,9 @@ def set_template(template : str):
     photo_template = photochem_templates / template
     clima_template = clima_templates / template
 
+def get_template():
+    return template_name
+
 def recompile_photo(verbose=False):
     std_out = None if verbose else subprocess.DEVNULL
 
@@ -96,30 +99,30 @@ def set_clima_coupled(val : int):
     with open(file_path, 'w') as file:
         file.writelines(lines)
 
-def couple_initialization_run():
+def couple_initialization_run(verbose : bool = False):
     print("\033[32mRunning coupled initialization...\033[0m")
-    print("\033[32mSelected Template: {template_name}\033[0m")
+    print(f"\033[32mSelected Template: {template_name}\033[0m")
     place_photo_files()
     set_photo_coupled(0)
     
-    recompile_photo()
-    photo_time = run_photo()
+    recompile_photo(verbose)
+    photo_time = run_photo(verbose)
 
     place_clima_files()
     set_clima_coupled(1)
 
-    recompile_clima()
-    clima_time = run_clima()
+    recompile_clima(verbose)
+    clima_time = run_clima(verbose)
 
     set_photo_coupled(1)
     return photo_time, clima_time
 
-def run_photochem_uncoupled(template_name : str = None):
+def run_photochem_uncoupled(template_name : str = None, verbose : bool = False):
     if template_name:
         set_template(template_name)
     print("\033[32mRunning uncoupled PHOTOCHEM...\033[0m")
-    print("\033[32mSelected Template: {template_name}\033[0m")
+    print(f"\033[32mSelected Template: {template_name}\033[0m")
     place_photo_files()
     set_photo_coupled(0)
     recompile_photo()
-    return run_photo()
+    return run_photo(verbose)
